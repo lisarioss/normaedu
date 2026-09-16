@@ -34,3 +34,6 @@ build/
 
 ### Logs ###
 *.log
+
+# Arquivos locais usados em testes da API
+/*.json
