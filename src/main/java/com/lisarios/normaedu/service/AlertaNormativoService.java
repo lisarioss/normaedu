@@ -11,7 +11,6 @@ import com.lisarios.normaedu.repository.AlertaNormativoRepository;
 import com.lisarios.normaedu.repository.NormaRepository;
 import org.springframework.stereotype.Service;
 import com.lisarios.normaedu.dto.request.AtualizarAlertaRequest;
-import com.lisarios.normaedu.exception.ResourceConflictException;
 
 import java.util.ArrayList;
 import java.util.List;

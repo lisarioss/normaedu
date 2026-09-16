@@ -9,6 +9,10 @@ import com.lisarios.normaedu.exception.ResourceNotFoundException;
 import com.lisarios.normaedu.repository.NormaRepository;
 import org.springframework.stereotype.Service;
 import com.lisarios.normaedu.domain.entity.ObjetoNormativo;
+import com.lisarios.normaedu.dto.response.ProcessamentoNormaPdfResponse;
+import com.lisarios.normaedu.dto.response.ReferenciaNormativaAnalisadaResponse;
+import com.lisarios.normaedu.dto.response.ReferenciaNormativaDetectadaResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,17 +23,26 @@ public class NormaService {
     private final OrgaoService orgaoService;
     private final AssuntoService assuntoService;
     private final ObjetoNormativoService objetoNormativoService;
+    private final DocumentoService documentoService;
+    private final ReferenciaNormativaService referenciaNormativaService;
+    private final AnaliseReferenciaNormativaService analiseReferenciaNormativaService;
 
     public NormaService(
             NormaRepository normaRepository,
             OrgaoService orgaoService,
             AssuntoService assuntoService,
-            ObjetoNormativoService objetoNormativoService
+            ObjetoNormativoService objetoNormativoService,
+            DocumentoService documentoService,
+            ReferenciaNormativaService referenciaNormativaService,
+            AnaliseReferenciaNormativaService analiseReferenciaNormativaService
     ) {
         this.normaRepository = normaRepository;
         this.orgaoService = orgaoService;
         this.assuntoService = assuntoService;
         this.objetoNormativoService = objetoNormativoService;
+        this.documentoService = documentoService;
+        this.referenciaNormativaService = referenciaNormativaService;
+        this.analiseReferenciaNormativaService = analiseReferenciaNormativaService;
     }
 
     public Norma criar(Long orgaoId, Norma norma) {
@@ -138,4 +151,36 @@ public class NormaService {
             orgaoId
         );
     }
+
+    public ProcessamentoNormaPdfResponse processarPdf(
+        Long normaId,
+        MultipartFile arquivo
+    ) {
+
+    Norma norma = buscarPorId(normaId);
+
+    String textoExtraido =
+            documentoService.extrairTexto(arquivo);
+
+    norma.setTextoIntegral(textoExtraido);
+    normaRepository.save(norma);
+
+    List<ReferenciaNormativaDetectadaResponse> referenciasDetectadas =
+            referenciaNormativaService.detectar(textoExtraido);
+
+    Long orgaoId = norma.getOrgao().getId();
+
+    List<ReferenciaNormativaAnalisadaResponse> referenciasAnalisadas =
+            analiseReferenciaNormativaService.analisar(
+                    referenciasDetectadas,
+                    orgaoId
+            );
+
+    return new ProcessamentoNormaPdfResponse(
+            norma.getId(),
+            arquivo.getOriginalFilename(),
+            textoExtraido,
+            referenciasAnalisadas
+    );
+}
 }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface NormaRepository extends JpaRepository<Norma, Long> {
 
@@ -35,6 +36,13 @@ public interface NormaRepository extends JpaRepository<Norma, Long> {
     List<Norma> findByTipoAndAno(
             TipoNorma tipo,
             Integer ano
+    );
+
+    Optional<Norma> findByTipoAndNumeroAndAnoAndOrgaoId(
+        TipoNorma tipo,
+        String numero,
+        Integer ano,
+        Long orgaoId
     );
 
     @Query("""
