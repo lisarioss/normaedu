@@ -4,6 +4,7 @@ import com.lisarios.normaedu.domain.entity.Assunto;
 import com.lisarios.normaedu.domain.entity.Norma;
 import com.lisarios.normaedu.domain.entity.Orgao;
 import com.lisarios.normaedu.domain.enums.StatusNorma;
+import com.lisarios.normaedu.domain.enums.TipoNorma;
 import com.lisarios.normaedu.exception.ResourceNotFoundException;
 import com.lisarios.normaedu.repository.NormaRepository;
 import org.springframework.stereotype.Service;
@@ -104,5 +105,37 @@ public class NormaService {
         objetoNormativoService.buscarPorId(objetoId);
 
         return normaRepository.findByObjetosId(objetoId);
+    }
+
+    public List<Norma> buscarPorEmenta(String termo) {
+
+        if (termo == null || termo.isBlank()) {
+            return List.of();
+        }
+
+        return normaRepository.findByEmentaContainingIgnoreCase(
+                termo.trim()
+        );
+    }
+
+    public List<Norma> buscar(
+        String termo,
+        Integer ano,
+        TipoNorma tipo,
+        StatusNorma status,
+        Long orgaoId
+    ) {
+    String termoNormalizado =
+            termo == null || termo.isBlank()
+                    ? null
+                    : termo.trim();
+
+        return normaRepository.buscarComFiltros(
+            termoNormalizado,
+            ano,
+            tipo,
+            status,
+            orgaoId
+        );
     }
 }

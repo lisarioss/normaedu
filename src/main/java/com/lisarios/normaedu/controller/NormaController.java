@@ -2,6 +2,7 @@ package com.lisarios.normaedu.controller;
 
 import com.lisarios.normaedu.domain.entity.Norma;
 import com.lisarios.normaedu.domain.enums.StatusNorma;
+import com.lisarios.normaedu.domain.enums.TipoNorma;
 import com.lisarios.normaedu.dto.request.NormaRequest;
 import com.lisarios.normaedu.dto.response.HistoricoNormaResponse;
 import com.lisarios.normaedu.dto.response.NormaResponse;
@@ -160,4 +161,21 @@ public class NormaController {
 
         return ResponseEntity.ok(historico);
     }
+
+    @GetMapping("/busca")
+        public ResponseEntity<List<NormaResponse>> buscar(
+                @RequestParam(required = false) String termo,
+                @RequestParam(required = false) Integer ano,
+                @RequestParam(required = false) TipoNorma tipo,
+                @RequestParam(required = false) StatusNorma status,
+                @RequestParam(required = false) Long orgaoId
+        ) {
+        List<NormaResponse> normas = normaService
+                .buscar(termo, ano, tipo, status, orgaoId)
+                .stream()
+                .map(NormaMapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(normas);
+        }
 }
