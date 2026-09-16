@@ -5,10 +5,13 @@ import com.lisarios.normaedu.domain.entity.Norma;
 import com.lisarios.normaedu.domain.entity.ObjetoNormativo;
 import com.lisarios.normaedu.domain.enums.StatusAlertaNormativo;
 import com.lisarios.normaedu.domain.enums.TipoAlertaNormativo;
+import com.lisarios.normaedu.exception.ResourceConflictException;
 import com.lisarios.normaedu.exception.ResourceNotFoundException;
 import com.lisarios.normaedu.repository.AlertaNormativoRepository;
 import com.lisarios.normaedu.repository.NormaRepository;
 import org.springframework.stereotype.Service;
+import com.lisarios.normaedu.dto.request.AtualizarAlertaRequest;
+import com.lisarios.normaedu.exception.ResourceConflictException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -123,4 +126,59 @@ public class AlertaNormativoService {
                         )
                 );
     }
+
+    public AlertaNormativo atualizar(
+        Long alertaId,
+        AtualizarAlertaRequest request
+        ) {
+                AlertaNormativo alerta = buscarPorId(alertaId);
+
+                StatusAlertaNormativo statusAtual = alerta.getStatus();
+                StatusAlertaNormativo novoStatus = request.status();
+
+                validarTransicaoStatus(statusAtual, novoStatus);
+
+                alerta.setStatus(novoStatus);
+
+                if (request.evidencia() != null
+                        && !request.evidencia().isBlank()) {
+
+                        alerta.setEvidencia(
+                                request.evidencia().trim()
+                        );
+                }
+
+                return alertaRepository.save(alerta);
+        }
+
+        private void validarTransicaoStatus(
+                StatusAlertaNormativo atual,
+                StatusAlertaNormativo novo
+        ) {
+        if (atual == novo) {
+                return;
+        }
+
+        boolean transicaoValida = switch (atual) {
+
+                case PENDENTE ->
+                        novo == StatusAlertaNormativo.EM_ANALISE
+                                || novo == StatusAlertaNormativo.DESCARTADO;
+
+                case EM_ANALISE ->
+                        novo == StatusAlertaNormativo.CONFIRMADO
+                                || novo == StatusAlertaNormativo.DESCARTADO;
+
+                case CONFIRMADO, DESCARTADO -> false;
+        };
+
+        if (!transicaoValida) {
+                throw new ResourceConflictException(
+                        "Transição de status inválida: "
+                                + atual
+                                + " -> "
+                                + novo
+                );
+        }
+        }
 }

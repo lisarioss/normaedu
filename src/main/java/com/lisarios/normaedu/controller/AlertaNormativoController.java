@@ -5,6 +5,9 @@ import com.lisarios.normaedu.mapper.AlertaNormativoMapper;
 import com.lisarios.normaedu.service.AlertaNormativoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.lisarios.normaedu.domain.entity.AlertaNormativo;
+import com.lisarios.normaedu.dto.request.AtualizarAlertaRequest;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -78,4 +81,17 @@ public class AlertaNormativoController {
                 )
         );
     }
+
+    @PatchMapping("/{id}")
+        public ResponseEntity<AlertaNormativoResponse> atualizar(
+                @PathVariable Long id,
+                @Valid @RequestBody AtualizarAlertaRequest request
+        ) {
+        AlertaNormativo alerta =
+                alertaService.atualizar(id, request);
+
+        return ResponseEntity.ok(
+                AlertaNormativoMapper.toResponse(alerta)
+        );
+        }
 }
