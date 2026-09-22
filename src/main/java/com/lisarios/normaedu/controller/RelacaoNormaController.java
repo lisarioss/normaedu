@@ -87,4 +87,16 @@ public class RelacaoNormaController {
 
         return ResponseEntity.ok(relacoes);
     }
+
+    @PatchMapping("/{id}/confirmacao")
+    public ResponseEntity<RelacaoNormaResponse> confirmar(
+                @PathVariable Long id
+        ) {
+                RelacaoNorma relacao =
+                        relacaoService.confirmar(id);
+        
+                return ResponseEntity.ok(
+                        RelacaoNormaMapper.toResponse(relacao)
+                );
+        }       
 }

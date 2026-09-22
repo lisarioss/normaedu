@@ -9,10 +9,14 @@ import com.lisarios.normaedu.dto.response.NormaResponse;
 import com.lisarios.normaedu.mapper.NormaMapper;
 import com.lisarios.normaedu.service.NormaService;
 import com.lisarios.normaedu.service.RelacaoNormaService;
+import com.lisarios.normaedu.dto.response.ProcessamentoNormaPdfResponse;
+import com.lisarios.normaedu.service.ProcessamentoNormaService;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,13 +26,16 @@ public class NormaController {
 
     private final NormaService normaService;
     private final RelacaoNormaService relacaoNormaService;
-
+    private final ProcessamentoNormaService processamentoNormaService;
+    
     public NormaController(
             NormaService normaService,
-            RelacaoNormaService relacaoNormaService
+            RelacaoNormaService relacaoNormaService,
+            ProcessamentoNormaService processamentoNormaService
     ) {
         this.normaService = normaService;
         this.relacaoNormaService = relacaoNormaService;
+        this.processamentoNormaService = processamentoNormaService;
     }
 
     @PostMapping("/orgao/{orgaoId}")
@@ -177,5 +184,17 @@ public class NormaController {
                 .toList();
 
         return ResponseEntity.ok(normas);
+        }
+
+        @PostMapping("/{normaId}/pdf")
+        public ResponseEntity<ProcessamentoNormaPdfResponse> processarPdf(
+                @PathVariable Long normaId,
+                @RequestParam("arquivo") MultipartFile arquivo
+        ) {
+
+        ProcessamentoNormaPdfResponse response =
+            processamentoNormaService.processarPdf(normaId, arquivo);
+
+        return ResponseEntity.ok(response);
         }
 }

@@ -9,6 +9,7 @@ import com.lisarios.normaedu.repository.RelacaoNormaRepository;
 import org.springframework.stereotype.Service;
 import com.lisarios.normaedu.dto.response.HistoricoNormaResponse;
 import com.lisarios.normaedu.dto.response.HistoricoRelacaoResponse;
+import com.lisarios.normaedu.domain.enums.TipoRelacaoNorma;
 
 import java.util.List;
 
@@ -68,6 +69,53 @@ public class RelacaoNormaService {
                 )
                 .build();
 
+        return relacaoRepository.save(relacao);
+    }
+
+    public RelacaoNorma criarCandidata(
+        Norma normaOrigem,
+        Norma normaDestino,
+        TipoRelacaoNorma tipoRelacao,
+        String evidenciaTextual
+        ) {
+        if (normaOrigem.getId().equals(normaDestino.getId())) {
+        return null;
+        }
+
+        boolean relacaoJaExiste =
+            relacaoRepository
+                    .existsByNormaOrigemIdAndNormaDestinoIdAndTipoRelacao(
+                            normaOrigem.getId(),
+                            normaDestino.getId(),
+                            tipoRelacao
+                    );
+
+        if (relacaoJaExiste) {
+                return null;
+        }
+
+        RelacaoNorma relacao = RelacaoNorma.builder()
+            .normaOrigem(normaOrigem)
+            .normaDestino(normaDestino)
+            .tipoRelacao(tipoRelacao)
+            .evidenciaTextual(evidenciaTextual)
+            .dataRelacao(normaOrigem.getDataPublicacao())
+            .confirmada(false)
+            .build();
+
+        return relacaoRepository.save(relacao);
+        }
+
+    public RelacaoNorma confirmar(Long id) {
+        RelacaoNorma relacao = buscarPorId(id);
+
+        if (Boolean.TRUE.equals(relacao.getConfirmada())) {
+                throw new ResourceConflictException(
+                        "Esta relação normativa já está confirmada"
+                );
+        }
+
+        relacao.setConfirmada(true);
         return relacaoRepository.save(relacao);
     }
 

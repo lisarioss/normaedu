@@ -47,6 +47,11 @@ public class ReferenciaNormativaService {
                     + "[^\\r\\n]*?" + REFERENCIA_LEI + "[^\\r\\n]*)"
     );
 
+    private static final Pattern PADRAO_IDENTIFICACAO_NORMA = Pattern.compile(
+        "(?i)\\b(LEI|DECRETO|PORTARIA|RESOLUÇÃO|RESOLUCAO|INSTRUÇÃO NORMATIVA|INSTRUCAO NORMATIVA)"
+                + "\\s*(?:n[º°o.]?\\s*)?(\\d+)\\s*/\\s*(\\d{4})"
+    );
+
     public List<ReferenciaNormativaDetectadaResponse> detectar(String texto) {
 
         List<ReferenciaNormativaDetectadaResponse> referencias =
@@ -127,4 +132,50 @@ public class ReferenciaNormativaService {
             );
         }
     }
+
+    public ReferenciaNormativaDetectadaResponse identificarNorma(
+        String texto
+        ) {
+        if (texto == null || texto.isBlank()) {
+                throw new IllegalArgumentException(
+                        "Não foi possível identificar a norma no documento"
+                );
+        }
+
+        Matcher matcher = PADRAO_IDENTIFICACAO_NORMA.matcher(texto);
+
+        if (!matcher.find()) {
+                throw new IllegalArgumentException(
+                        "Não foi possível identificar tipo, número e ano da norma no documento"
+                );
+        }
+
+        TipoNorma tipoNorma = converterTipoNorma(matcher.group(1));
+        String numero = matcher.group(2);
+        Integer ano = Integer.valueOf(matcher.group(3));
+
+        return new ReferenciaNormativaDetectadaResponse(
+                null,
+                tipoNorma,
+                numero,
+                ano,
+                matcher.group().trim()
+        );
+        }
+
+        private TipoNorma converterTipoNorma(String valor) {
+                String normalizado = valor
+                        .toUpperCase()
+                        .replace("Ç", "C")
+                        .replace("Ã", "A");
+
+                return switch (normalizado) {
+                        case "LEI" -> TipoNorma.LEI;
+                        case "DECRETO" -> TipoNorma.DECRETO;
+                        case "PORTARIA" -> TipoNorma.PORTARIA;
+                        case "RESOLUCAO" -> TipoNorma.RESOLUCAO;
+                        case "INSTRUCAO NORMATIVA" -> TipoNorma.INSTRUCAO_NORMATIVA;
+                        default -> TipoNorma.OUTRO;
+                };
+        }
 }

@@ -156,31 +156,55 @@ public class NormaService {
         Long normaId,
         MultipartFile arquivo
     ) {
+        Norma norma = buscarPorId(normaId);
 
-    Norma norma = buscarPorId(normaId);
-
-    String textoExtraido =
+        String textoExtraido =
             documentoService.extrairTexto(arquivo);
 
-    norma.setTextoIntegral(textoExtraido);
-    normaRepository.save(norma);
+        ReferenciaNormativaDetectadaResponse identificacao =
+            referenciaNormativaService.identificarNorma(textoExtraido);
 
-    List<ReferenciaNormativaDetectadaResponse> referenciasDetectadas =
+        boolean mesmaNorma =
+            norma.getTipo() == identificacao.tipoNorma()
+                    && norma.getNumero().equals(identificacao.numero())
+                    && norma.getAno().equals(identificacao.ano());
+
+        if (!mesmaNorma) {
+        throw new IllegalArgumentException(
+                "O documento enviado pertence à "
+                        + identificacao.tipoNorma()
+                        + " "
+                        + identificacao.numero()
+                        + "/"
+                        + identificacao.ano()
+                        + ", mas o cadastro selecionado corresponde à "
+                        + norma.getTipo()
+                        + " "
+                        + norma.getNumero()
+                        + "/"
+                        + norma.getAno()
+        );
+    }
+
+    norma.setTextoIntegral(textoExtraido);
+        normaRepository.save(norma);
+
+        List<ReferenciaNormativaDetectadaResponse> referenciasDetectadas =
             referenciaNormativaService.detectar(textoExtraido);
 
-    Long orgaoId = norma.getOrgao().getId();
+        Long orgaoId = norma.getOrgao().getId();
 
-    List<ReferenciaNormativaAnalisadaResponse> referenciasAnalisadas =
+        List<ReferenciaNormativaAnalisadaResponse> referenciasAnalisadas =
             analiseReferenciaNormativaService.analisar(
                     referenciasDetectadas,
                     orgaoId
             );
 
-    return new ProcessamentoNormaPdfResponse(
+        return new ProcessamentoNormaPdfResponse(
             norma.getId(),
             arquivo.getOriginalFilename(),
             textoExtraido,
             referenciasAnalisadas
     );
-}
+    }
 }
